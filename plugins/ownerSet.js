@@ -117,36 +117,5 @@ export default [
       const text = `🛡️ Sudo users:\n\n` + sudo.map((id, i) => `${i + 1}. @${id.split('@')[0]}`).join('\n')
       await Dave.sendMessage(msg.key.remoteJid, { text, mentions: sudo })
     }
-  },
-
-  {
-    name: 'checkupdate',
-    description: 'Check for new updates from GitHub',
-    category: 'owner',
-    handler: async ({ Dave, msg, isOwner }) => {
-      if (!isOwner) return Dave.sendMessage(msg.key.remoteJid, { text: '❌ Command reserved for bot owner.' }, { quoted: msg })
-      exec('git fetch && git log HEAD..origin/main --oneline', (err, stdout) => {
-        if (err || !stdout.trim()) return Dave.sendMessage(msg.key.remoteJid, { text: '✅ Bot is up to date!' })
-        const changelog = stdout.split('\n').map(line => '• ' + line.trim()).join('\n')
-        Dave.sendMessage(msg.key.remoteJid, { text: `🔄 Updates available:\n\n${changelog}` })
-      })
-    }
-  },
-
-  {
-    name: 'update',
-    description: 'Pull latest update from GitHub and restart',
-    category: 'owner',
-    handler: async ({ Dave, msg, isOwner }) => {
-      if (!isOwner) return Dave.sendMessage(msg.key.remoteJid, { text: '❌ Command reserved for bot owner.' }, { quoted: msg })
-
-      await Dave.sendMessage(msg.key.remoteJid, { text: '⏳ Updating bot from GitHub...' }, { quoted: msg })
-      exec('git pull', (err, stdout, stderr) => {
-        if (err) return Dave.sendMessage(msg.key.remoteJid, { text: `❌ Update failed:\n\n${stderr}` }, { quoted: msg })
-        Dave.sendMessage(msg.key.remoteJid, { text: `✅ Update completed:\n\n${stdout}\n\nRestarting...` }).then(() => {
-          process.exit(0) // Restart bot
-        })
-      })
-    }
   }
 ]
