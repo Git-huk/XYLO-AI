@@ -2,7 +2,7 @@ import { exec } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
-const GIT_DIR = path.join(process.cwd(), 'XYLO-AI') // Adjust this if needed
+const GIT_DIR = process.cwd() // Adjust this if needed
 
 const send = (client, jid, text, quoted) =>
   client.sendMessage(jid, { text }, { quoted })
