@@ -58,7 +58,8 @@ export default [
 
       send(Dave, msg.key.remoteJid, '📥 Pulling updates from GitHub...', msg)
 
-      exec('git pull', { cwd: GIT_DIR }, (err, stdout, stderr) => {
+      // 🔧 Fix: Discard local changes before pulling
+      exec('git reset --hard HEAD && git pull', { cwd: GIT_DIR }, (err, stdout, stderr) => {
         if (err) return send(Dave, msg.key.remoteJid, `❌ Update failed:\n${stderr}`, msg)
 
         send(Dave, msg.key.remoteJid, `✅ Update completed:\n\n${stdout}\n\n♻ Restarting...`, msg)
