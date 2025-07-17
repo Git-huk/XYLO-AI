@@ -125,7 +125,7 @@ export default [
     }
   },
   {
-    name: 'antilink',
+    name: 'antic',
     description: 'Set antic mode (off/delete/warn/kick)',
     category: 'group',
     handler: async ({ from, args, isAdmin, reply }) => {
