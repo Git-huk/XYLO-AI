@@ -442,9 +442,13 @@ Dave.send5ButImg = async (jid, text = '', footer = '', img, buttons = [], thumb,
     if (config.MODE === 'private' && !(isOwner || isCreator)) return
     
     const isGroup = from.endsWith('@g.us')
-    const groupMetadata = isGroup ? await Dave.groupMetadata(from).catch(() => ({})) : {}
-    const admin = isGroup ? await getGroupAdmin(from, sender) : false
-    const botAdmin = isGroup ? await getBotAdmin(from, Dave.user.id.split(':')[0]) : false
+    const [groupMetadata, admin, botAdmin] = isGroup
+  ? await Promise.all([
+      Dave.groupMetadata(from).catch(() => ({})),
+      getGroupAdmin(from, sender),
+      getBotAdmin(from, Dave.user.id.split(':')[0])
+    ])
+  : [{}, false, false]
 
     const reply = async (txt, opt = {}) => Dave.sendMessage(from, { text: txt, ...opt }, { quoted: msg })
 
