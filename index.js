@@ -76,9 +76,7 @@ async function loadSession() {
 
       if (!megaCode.includes('#')) throw new Error('Invalid MEGA session: missing hash (#key)');
 
-      const megaLink = `https://mega.nz/file/${megaCode}`;  // ✅ Full URL
-      console.log('📦 Downloading MEGA session:', megaLink);
-
+      const megaLink = `https://mega.nz/file/${megaCode}`;
       const file = File.fromURL(megaLink);
       const data = await new Promise((resolve, reject) => {
         file.download((err, fileData) => err ? reject(err) : resolve(fileData));
