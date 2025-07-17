@@ -24,7 +24,7 @@ import { File } from 'megajs'
 import config from './config.js'
 import { getConfig } from './lib/configdb.js'
 import { handleGroupParticipantsUpdate } from './lib/welcomeHandler.js'
-import { setupLinkDetection } from './lib/antilinkDetection.js'
+import { setupModerationDetection } from './lib/setupModerationDetection.js'
 import { saveGroupMetadata, isAdmin as getGroupAdmin, isBotAdmin as getBotAdmin } from './lib/groupMeta.js'
 import { handleDeletedMessage } from './lib/antideleteHandler.js'
 import PhoneNumber from 'awesome-phonenumber'
@@ -522,7 +522,7 @@ Dave.send5ButImg = async (jid, text = '', footer = '', img, buttons = [], thumb,
     }
   })
   // ✅ Call antilink setup with admin checker function
-  setupLinkDetection(Dave, (jid) => botAdminStatus[jid] ?? false)
+  setupModerationDetection(Dave, (jid) => botAdminStatus[jid] ?? false)
   
 await setupChatbotListener(Dave)
 
