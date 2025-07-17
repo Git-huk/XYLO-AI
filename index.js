@@ -54,24 +54,45 @@ loadSudoAndBanned()
 global.antideleteStore = new Map()
 const botAdminStatus = {}
 setInterval(() => global.antideleteStore.clear(), 1000 * 60 * 10)
-
 async function loadSession() {
   try {
-    if (!config.SESSION_ID) return null
-    if (config.SESSION_ID.startsWith('XBOT-MD**')) {
-      const id = config.SESSION_ID.replace('XBOT-MD**', '')
-      const { data } = await axios.get(`https://dave-auth-manager.onrender.com/files/${id}.json`)
-      fs.writeFileSync(credsPath, JSON.stringify(data), 'utf8')
-      return data
+    if (!config.SESSION_ID) {
+      console.log('⚠️ No SESSION_ID provided in config!');
+      return null;
     }
-    const megaId = config.SESSION_ID.replace('XBOT-MD~', '')
-    const file = File.fromURL(`https://mega.nz/file/${megaId}`)
-    const data = await new Promise((res, rej) => file.download((e, d) => e ? rej(e) : res(d)))
-    fs.writeFileSync(credsPath, data)
-    return JSON.parse(data.toString())
+
+    // 🌐 If SESSION_ID is from your custom Render backend
+    if (config.SESSION_ID.startsWith('XBOT-MD**')) {
+      const id = config.SESSION_ID.replace('XBOT-MD**', '');
+      const { data } = await axios.get(`https://dave-auth-manager.onrender.com/files/${id}.json`);
+      fs.writeFileSync(credsPath, JSON.stringify(data), 'utf8');
+      console.log('✅ Xcall session loaded.');
+      return data;
+    }
+
+    // 🗃️ If SESSION_ID is a MEGA session link
+    if (config.SESSION_ID.startsWith('XBOT-MD~')) {
+      const megaCode = config.SESSION_ID.replace('XBOT-MD~', '');
+
+      if (!megaCode.includes('#')) throw new Error('Invalid MEGA session: missing hash (#key)');
+
+      const megaLink = `https://mega.nz/file/${megaCode}`;  // ✅ Full URL
+      console.log('📦 Downloading MEGA session:', megaLink);
+
+      const file = File.fromURL(megaLink);
+      const data = await new Promise((resolve, reject) => {
+        file.download((err, fileData) => err ? reject(err) : resolve(fileData));
+      });
+
+      fs.writeFileSync(credsPath, data);
+      console.log('✅ MEGA session downloaded and saved.');
+      return JSON.parse(data.toString());
+    }
+
+    throw new Error('Unsupported SESSION_ID format.');
   } catch (e) {
-    console.error('❌ Session error:', e.message)
-    return null
+    console.error('❌ Session error:', e.message);
+    return null;
   }
 }
 
