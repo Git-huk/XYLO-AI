@@ -59,21 +59,19 @@ export default [
       }
     }
   },
-
   {
-    name: 'pickup',
+    name: 'line',
     description: 'Get a pickup line',
     category: 'fun',
     handler: async ({ msg, Dave, from }) => {
       try {
-        const res = await axios.get('https://vinuxd.vercel.app/api/pickup')
-        await Dave.sendMessage(from, { text: `💘 Pickup line: ${res.data.pickup}` }, { quoted: msg })
+        const res = await axios.get('https://api.popcat.xyz/v2/pickuplines')
+        await Dave.sendMessage(from, { text: `${res.data.message.pickupline}` }, { quoted: msg })
       } catch {
         await Dave.sendMessage(from, { text: `❌ Failed to fetch pickup line.` }, { quoted: msg })
       }
     }
   },
-
   {
     name: 'insult',
     description: 'Get a random insult',
