@@ -19,8 +19,8 @@ export default [
     name: 'checkupdate',
     description: 'Check for new updates from GitHub',
     category: 'owner',
-    handler: async ({ Dave, msg, isOwner }) => {
-      if (!isOwner) return msg.reply('❌ Owner only.')
+    handler: async ({ Dave, msg, isOwner, reply }) => {
+      if (!isOwner) return reply('❌ Owner only.')
 
       const jid = msg.key.remoteJid
 
@@ -55,8 +55,8 @@ export default [
     name: 'update',
     description: 'Pull latest updates from GitHub and restart bot',
     category: 'owner',
-    handler: async ({ Dave, msg, isOwner }) => {
-      if (!isOwner) return msg.reply('❌ Owner only.')
+    handler: async ({ Dave, msg, isOwner, reply }) => {
+      if (!isOwner) return reply('❌ Owner only.')
 
       const jid = msg.key.remoteJid
 
