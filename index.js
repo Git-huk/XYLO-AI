@@ -426,10 +426,7 @@ Dave.send5ButImg = async (jid, text = '', footer = '', img, buttons = [], thumb,
     if (!isCmd) return
 
     const type = getContentType(msg.message)
-    const quoted = type == 'extendedTextMessage' && msg.message.extendedTextMessage.contextInfo != null
-      ? msg.message.extendedTextMessage.contextInfo.quotedMessage || []
-      : []
-
+    const quoted = msg.quoted || null
     const body = (type === 'conversation') ? msg.message.conversation
       : (type === 'extendedTextMessage') ? msg.message.extendedTextMessage.text
       : (type === 'imageMessage') && msg.message.imageMessage.caption
