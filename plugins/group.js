@@ -290,7 +290,7 @@ export default [
 },
 {
   name: 'tag',
-  description: 'Tag everyone with text or by replying to a message',
+  description: 'Tag everyone with text or by replying to any message',
   category: 'group',
   handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quoted }) => {
     if (!isAdmin && !isOwner) {
@@ -299,22 +299,24 @@ export default [
 
     try {
       const metadata = await Dave.groupMetadata(from)
-      const participants = metadata?.participants || []
-      const mentions = participants.map(p => p.id)
+      const mentions = metadata.participants.map(p => p.id)
 
-      // If user replied to a message
+      // If there's a quoted message, re-send it with mentions
       if (quoted?.message) {
-        const content = quoted.message
-        const type = Object.keys(content)[0]
-        const contextInfo = { ...(quoted.contextInfo || {}), mentionedJid: mentions }
+        const type = Object.keys(quoted.message)[0]
 
-        return await Dave.sendMessage(from, {
-          [type]: content[type],
-          contextInfo
+        await Dave.sendMessage(from, {
+          [type]: quoted.message[type],
+          contextInfo: {
+            ...(quoted.message[type]?.contextInfo || {}),
+            mentionedJid: mentions
+          }
         }, { quoted: msg })
+
+        return
       }
 
-      // If user passed text
+      // Else, tag with text
       const text = args.join(' ')
       if (!text) return reply('⚠️ Provide a message or reply to one.')
 
@@ -322,7 +324,6 @@ export default [
         text,
         mentions
       }, { quoted: msg })
-
     } catch (err) {
       console.error('❌ tag error:', err.message)
       reply('❌ Failed to tag everyone.')
