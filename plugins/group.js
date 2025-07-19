@@ -290,33 +290,41 @@ export default [
 },
 {
   name: 'tag',
-  description: 'Tag everyone with text or by replying to any message',
+  description: 'Tag everyone with a message or by replying',
   category: 'group',
   handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quoted }) => {
-    if (!isAdmin && !isOwner) {
-      return reply('❌ Only *Admins* or *Owners* can use this.')
-    }
+    if (!isAdmin && !isOwner) return reply('❌ Admins or Owners only.')
 
     try {
       const metadata = await Dave.groupMetadata(from)
       const mentions = metadata.participants.map(p => p.id)
 
-      // If there's a quoted message, re-send it with mentions
+      // REPLY HANDLING
       if (quoted?.message) {
         const type = Object.keys(quoted.message)[0]
+        const content = quoted.message[type]
 
-        await Dave.sendMessage(from, {
-          [type]: quoted.message[type],
-          contextInfo: {
-            ...(quoted.message[type]?.contextInfo || {}),
-            mentionedJid: mentions
-          }
-        }, { quoted: msg })
+        // If it's a media message
+        if (['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(type)) {
+          await Dave.sendMessage(from, {
+            [type.replace('Message', '')]: content,
+            mimetype: content.mimetype,
+            caption: content.caption || '',
+            contextInfo: { mentionedJid: mentions }
+          }, { quoted: msg })
+        } else {
+          // It's a text message
+          const text = (content.text || content.caption || JSON.stringify(content)).trim()
+          await Dave.sendMessage(from, {
+            text,
+            mentions
+          }, { quoted: msg })
+        }
 
         return
       }
 
-      // Else, tag with text
+      // ARGUMENT-BASED TAGGING
       const text = args.join(' ')
       if (!text) return reply('⚠️ Provide a message or reply to one.')
 
@@ -324,6 +332,7 @@ export default [
         text,
         mentions
       }, { quoted: msg })
+
     } catch (err) {
       console.error('❌ tag error:', err.message)
       reply('❌ Failed to tag everyone.')
