@@ -290,7 +290,7 @@ export default [
 },
 {
   name: 'tag',
-  description: 'Tag everyone with a message or by replying',
+  description: 'Tag everyone with a message or by replying to text/media',
   category: 'group',
   handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quoted }) => {
     if (!isAdmin && !isOwner) return reply('❌ Admins or Owners only.')
@@ -301,20 +301,25 @@ export default [
 
       // REPLY HANDLING
       if (quoted?.message) {
-        const type = Object.keys(quoted.message)[0]
-        const content = quoted.message[type]
+        const type = quoted.mtype
+        const isMedia = ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(type)
 
-        // If it's a media message
-        if (['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(type)) {
+        if (isMedia) {
+          const buffer = await quoted.download()
+          const options = {
+            contextInfo: { mentionedJid: mentions },
+            caption: quoted.message[type]?.caption || ''
+          }
+
           await Dave.sendMessage(from, {
-            [type.replace('Message', '')]: content,
-            mimetype: content.mimetype,
-            caption: content.caption || '',
-            contextInfo: { mentionedJid: mentions }
+            [type.replace('Message', '')]: buffer,
+            mimetype: quoted.message[type]?.mimetype,
+            ...options
           }, { quoted: msg })
+
         } else {
-          // It's a text message
-          const text = (content.text || content.caption || JSON.stringify(content)).trim()
+          // It's a text reply
+          const text = quoted.message?.conversation || quoted.message[type]?.text || JSON.stringify(quoted.message)
           await Dave.sendMessage(from, {
             text,
             mentions
