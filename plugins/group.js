@@ -292,7 +292,7 @@ export default [
   name: 'tag',
   description: 'Tag everyone with text or by replying to a message',
   category: 'group',
-  handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quoted }) => {
+  handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quotedMsg, quoted }) => {
     if (!isAdmin && !isOwner) {
       return reply('❌ Only *Admins* or *Owners* can use this.')
     }
@@ -303,10 +303,10 @@ export default [
       const mentions = participants.map(p => p.id)
 
       // If there's a reply, forward it with mentions
-      if (quoted?.message) {
-        const content = quoted.message
+      if (quotedMsg?.message) {
+        const content = quotedMsg.message
         const type = Object.keys(content)[0]
-        const contextInfo = { ...(quoted.contextInfo || {}), mentionedJid: mentions }
+        const contextInfo = { ...(quotedMsg.contextInfo || {}), mentionedJid: mentions }
 
         return await Dave.sendMessage(from, {
           [type]: content[type],
