@@ -230,31 +230,102 @@ export default [
   name: 'tagall',
   description: 'Mention all group members with a custom message',
   category: 'group',
-  handler: async ({ from, Dave, isAdmin, reply, args, isOwner }) => {
-    if (!isAdmin && !isOwner) return reply('❌ Admin & Owners only.')
+  handler: async ({ from, Dave, isAdmin, isOwner, reply, args }) => {
+    if (!isAdmin && !isOwner) {
+      return reply('❌ Only *Admins* or *Owners* can use this.')
+    }
 
     try {
       const metadata = await Dave.groupMetadata(from)
-      const participants = metadata.participants
+      const participants = metadata?.participants || []
 
-      if (!participants || participants.length === 0)
+      if (participants.length === 0)
         return reply('⚠️ No members found.')
 
       const mentions = participants.map(p => p.id)
-      const mentionText = participants
-        .map(p => `👤 @${p.id.split('@')[0]}`)
-        .join('\n')
+      const mentionLines = participants.map(p => `👤 @${p.id.split('@')[0]}`).join('\n')
 
-      let message = ''
-      if (args.length === 0) {
-        message = `*📢 Attention Everyone!*\n\n${mentionText}`
-      } else {
-        message = `${args.join(' ')}\n\n${mentionText}`
-      }
+      const customMsg = args.join(' ')
+      const message = customMsg
+        ? `${customMsg}\n\n${mentionLines}`
+        : `*📢 Attention everyone!*\n\n${mentionLines}`
 
       await Dave.sendMessage(from, { text: message, mentions })
+    } catch (e) {
+      console.error('❌ tagall error:', e.message)
+      reply('❌ Failed to mention everyone.')
+    }
+  }
+},
+{
+  name: 'botall',
+  description: 'Mention all bots in the group',
+  category: 'group',
+  handler: async ({ from, Dave, isAdmin, isOwner, reply }) => {
+    if (!isAdmin && !isOwner) {
+      return reply('❌ Only *Admins* or *Owners* can use this.')
+    }
+
+    try {
+      const metadata = await Dave.groupMetadata(from)
+      const participants = metadata?.participants || []
+
+      if (participants.length === 0) return reply('⚠️ No members found.')
+
+      // Detect bots by checking for user devices (like :1@) or name tricks
+      const bots = participants.filter(p => p.id.includes(':'))
+
+      if (bots.length === 0) return reply('🤖 No bots found in this group.')
+
+      const mentions = bots.map(p => p.id)
+      const mentionText = bots.map(p => `🤖 @${p.id.split('@')[0]}`).join('\n')
+
+      const message = `*🤖 Calling All Bots!*\n\n${mentionText}`
+      await Dave.sendMessage(from, { text: message, mentions })
     } catch (err) {
-      reply('❌ Failed to fetch group members.')
+      console.error('botall error:', err.message)
+      reply('❌ Failed to mention bots.')
+    }
+  }
+},
+{
+  name: 'tag',
+  description: 'Tag everyone with text or by replying to a message',
+  category: 'group',
+  handler: async ({ msg, args, from, Dave, isAdmin, isOwner, reply, quoted }) => {
+    if (!isAdmin && !isOwner) {
+      return reply('❌ Only *Admins* or *Owners* can use this.')
+    }
+
+    try {
+      const metadata = await Dave.groupMetadata(from)
+      const participants = metadata?.participants || []
+      const mentions = participants.map(p => p.id)
+
+      // If there's a reply, forward it with mentions
+      if (quoted?.message) {
+        const content = quoted.message
+        const type = Object.keys(content)[0]
+        const contextInfo = { ...(quoted.contextInfo || {}), mentionedJid: mentions }
+
+        return await Dave.sendMessage(from, {
+          [type]: content[type],
+          contextInfo
+        }, { quoted: msg })
+      }
+
+      // Otherwise send text + mentions
+      const text = args.join(' ')
+      if (!text) return reply('⚠️ Provide a message or reply to one.')
+
+      await Dave.sendMessage(from, {
+        text,
+        mentions
+      }, { quoted: msg })
+
+    } catch (err) {
+      console.error('❌ tag error:', err.message)
+      reply('❌ Failed to tag everyone.')
     }
   }
 }
