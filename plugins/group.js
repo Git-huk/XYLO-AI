@@ -230,8 +230,8 @@ export default [
   name: 'tagall',
   description: 'Mention all group members with a custom message',
   category: 'group',
-  handler: async ({ from, Dave, isAdmin, reply, args }) => {
-    if (!isAdmin) return reply('❌ Admin only.')
+  handler: async ({ from, Dave, isAdmin, reply, args, isOwner }) => {
+    if (!isAdmin && !isOwner) return reply('❌ Admin & Owners only.')
 
     try {
       const metadata = await Dave.groupMetadata(from)
